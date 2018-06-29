@@ -5,6 +5,8 @@ For more information on the WLD contribution, see my [Cognates GitHub repository
 
 In short, you need to add the costs for replacing the characters between the two languages.  This will constraint production of alignment candidates to be similar in form and function if possible.  Typically, this helps in improving the dictionary induction quality between related languages.
 
+In addition to the supervised and unsupervised settings, the semi-supervised setting starts with the unsupervised adversarial alignments and loads the training dictionary after that for the iterative Procrustes procedure.
+
 ![Model](https://s3.amazonaws.com/arrival/outline_all.png)
 
 MUSE is a Python library for *multilingual word embeddings*, whose goal is to provide the community with:

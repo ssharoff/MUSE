@@ -1,4 +1,5 @@
 # Copyright (c) 2017-present, Facebook, Inc.
+# Copyright (c) 2018-present, Serge Sharoff for the WLD additions
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -26,7 +27,7 @@ VALIDATION_METRIC = 'precision_at_1-csls_knn_10'
 parser = argparse.ArgumentParser(description='Supervised training')
 parser.add_argument("--seed", type=int, default=-1, help="Initialization seed")
 parser.add_argument("--verbose", type=int, default=2, help="Verbose level (2:debug, 1:info, 0:warning)")
-parser.add_argument("--exp_path", type=str, default="", help="Where to store experiment logs and models")
+parser.add_argument("--exp_path", type=str, default="./", help="Where to store experiment logs and models")
 parser.add_argument("--exp_name", type=str, default="debug", help="Experiment name")
 parser.add_argument("--exp_id", type=str, default="", help="Experiment ID")
 parser.add_argument("--cuda", type=bool_flag, default=True, help="Run on GPU")
@@ -58,15 +59,15 @@ parser.add_argument("--normalize_embeddings", type=str, default="", help="Normal
 params = parser.parse_args()
 
 # check parameters
-assert not params.cuda or torch.cuda.is_available()
-assert params.dico_train in ["identical_char", "default"] or os.path.isfile(params.dico_train)
-assert params.dico_build in ["S2T", "T2S", "S2T|T2S", "S2T&T2S"]
-assert params.dico_max_size == 0 or params.dico_max_size < params.dico_max_rank
-assert params.dico_max_size == 0 or params.dico_max_size > params.dico_min_size
-assert os.path.isfile(params.src_emb)
-assert os.path.isfile(params.tgt_emb)
-assert params.dico_eval == 'default' or os.path.isfile(params.dico_eval)
-assert params.export in ["", "txt", "pth"]
+assert not params.cuda or torch.cuda.is_available(), "Cuda is not available"
+assert params.dico_train in ["identical_char", "default"] or os.path.isfile(params.dico_train), "Training file %s not found" % params.dico_train
+assert params.dico_build in ["S2T", "T2S", "S2T|T2S", "S2T&T2S"], "Incorrect %s" % params.dico_build
+assert params.dico_max_size == 0 or params.dico_max_size < params.dico_max_rank, "Too small %d" % params.dico_max_size
+assert params.dico_max_size == 0 or params.dico_max_size > params.dico_min_size, "Too large %d" % params.dico_max_size
+assert os.path.isfile(params.src_emb), "Source embeddings %s not found" % params.src_emb
+assert os.path.isfile(params.tgt_emb), "Target embeddings %s not found" % params.tgt_emb
+assert params.dico_eval == 'default' or os.path.isfile(params.dico_eval), "Eval %s not found" % params.dico_eval
+assert params.export in ["", "txt", "pth"], "Incorrect %s" % params.export
 
 # build logger / model / trainer / evaluator
 logger = initialize_exp(params)

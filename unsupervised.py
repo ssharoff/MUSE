@@ -1,9 +1,10 @@
 # Copyright (c) 2017-present, Facebook, Inc.
+# Copyright (c) 2018-present, Serge Sharoff for the WLD additions
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-#
+
 
 import os
 import time
@@ -70,25 +71,32 @@ parser.add_argument("--dico_max_rank", type=int, default=15000, help="Maximum di
 parser.add_argument("--dico_min_size", type=int, default=0, help="Minimum generated dictionary size (0 to disable)")
 parser.add_argument("--dico_max_size", type=int, default=0, help="Maximum generated dictionary size (0 to disable)")
 # reload pre-trained embeddings
-parser.add_argument("--src_emb", type=str, default="", help="Reload source embeddings")
-parser.add_argument("--tgt_emb", type=str, default="", help="Reload target embeddings")
+parser.add_argument("--src_emb", type=str, default="", help="Load source embeddings")
+parser.add_argument("--tgt_emb", type=str, default="", help="Load target embeddings")
 parser.add_argument("--normalize_embeddings", type=str, default="", help="Normalize embeddings before training")
+parser.add_argument("-l","--levenshtein", type=str, default="", help="Load Levenshtein costs")
 
 
 # parse parameters
 params = parser.parse_args()
 
 # check parameters
-assert not params.cuda or torch.cuda.is_available()
+assert not params.cuda or torch.cuda.is_available(), "Cuda is not available"
 assert 0 <= params.dis_dropout < 1
 assert 0 <= params.dis_input_dropout < 1
 assert 0 <= params.dis_smooth < 0.5
 assert params.dis_lambda > 0 and params.dis_steps > 0
 assert 0 < params.lr_shrink <= 1
-assert os.path.isfile(params.src_emb)
-assert os.path.isfile(params.tgt_emb)
-assert params.dico_eval == 'default' or os.path.isfile(params.dico_eval)
-assert params.export in ["", "txt", "pth"]
+assert os.path.isfile(params.src_emb), "Source embeddings %s not found" % params.src_emb
+assert os.path.isfile(params.tgt_emb), "Target embeddings %s not found" % params.tgt_emb
+assert params.dico_eval == 'default' or os.path.isfile(params.dico_eval), "Eval %s not found" % params.dico_eval
+assert params.export in ["", "txt", "pth"], "Incorrect %s" % params.export
+
+# assert params.dico_train in ["identical_char", "default"] or os.path.isfile(params.dico_train), "Training file %s not found" % params.dico_train
+# assert params.dico_build in ["S2T", "T2S", "S2T|T2S", "S2T&T2S"], "Incorrect %s" % params.dico_build
+# assert params.dico_max_size == 0 or params.dico_max_size < params.dico_max_rank, "Too small %d" % params.dico_max_size
+# assert params.dico_max_size == 0 or params.dico_max_size > params.dico_min_size, "Too large %d" % params.dico_max_size
+
 
 # build model / trainer / evaluator
 logger = initialize_exp(params)

@@ -18,6 +18,8 @@ from .utils import clip_parameters
 from .dico_builder import build_dictionary
 from .evaluation.word_translation import DIC_EVAL_PATH, load_identical_char_dico, load_dictionary
 
+import smallutils as ut
+
 
 logger = getLogger()
 
@@ -130,6 +132,12 @@ class Trainer(object):
         self.orthogonalize()
 
         return 2 * self.params.batch_size
+
+    def load_levcosts(self, lev_costs):
+        """
+        Load Levenshtein costs.
+        """
+        self.levcosts=ut.readcosts(lev_costs)
 
     def load_training_dico(self, dico_train):
         """

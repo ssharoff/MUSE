@@ -13,6 +13,7 @@ import argparse
 from collections import OrderedDict
 import numpy as np
 import torch
+import smallutils as ut
 
 from src.utils import bool_flag, initialize_exp
 from src.models import build_model
@@ -63,7 +64,6 @@ parser.add_argument("--lr_shrink", type=float, default=0.5, help="Shrink the lea
 # training refinement
 parser.add_argument("--n_refinement", type=int, default=5, help="Number of refinement iterations (0 to disable the refinement procedure)")
 # dictionary creation parameters (for refinement)
-parser.add_argument("--dico_train", type=str, default="default", help="Path to training dictionary (default: use identical character strings)")
 parser.add_argument("--dico_eval", type=str, default="default", help="Path to evaluation dictionary")
 parser.add_argument("--dico_method", type=str, default='csls_knn_10', help="Method used for dictionary generation (nn/invsm_beta_30/csls_knn_10)")
 parser.add_argument("--dico_build", type=str, default='S2T', help="S2T,T2S,S2T|T2S,S2T&T2S")
@@ -75,7 +75,10 @@ parser.add_argument("--dico_max_size", type=int, default=0, help="Maximum genera
 parser.add_argument("--src_emb", type=str, default="", help="Load source embeddings")
 parser.add_argument("--tgt_emb", type=str, default="", help="Load target embeddings")
 parser.add_argument("--normalize_embeddings", type=str, default="", help="Normalize embeddings before training")
+
+parser.add_argument("--dico_train", type=str, default="default", help="Path to training dictionary (default: use identical character strings)")
 parser.add_argument("-l","--levenshtein", type=str, default="", help="Load Levenshtein costs")
+
 
 # parse parameters
 params = parser.parse_args()
@@ -92,8 +95,11 @@ assert os.path.isfile(params.tgt_emb), "Target embeddings %s not found" % params
 assert params.dico_eval == 'default' or os.path.isfile(params.dico_eval), "Eval %s not found" % params.dico_eval
 assert params.export in ["", "txt", "pth"], "Incorrect %s" % params.export
 
-# assert params.dico_train in ["identical_char", "default"] or os.path.isfile(params.dico_train), "Training file %s not found" % params.dico_train
-# assert params.dico_build in ["S2T", "T2S", "S2T|T2S", "S2T&T2S"], "Incorrect %s" % params.dico_build
+assert len(params.levenshtein)==0 or os.path.isfile(params.levenshtein), "Levenshtein costs file %s not found" % params.levenshtein
+
+assert params.dico_train in ["identical_char", "default"] or os.path.isfile(params.dico_train), "Training file %s not found" % params.dico_train
+
+assert params.dico_build in ["S2T", "T2S", "S2T|T2S", "S2T&T2S"], "Incorrect %s" % params.dico_build
 # assert params.dico_max_size == 0 or params.dico_max_size < params.dico_max_rank, "Too small %d" % params.dico_max_size
 # assert params.dico_max_size == 0 or params.dico_max_size > params.dico_min_size, "Too large %d" % params.dico_max_size
 
@@ -104,6 +110,11 @@ src_emb, tgt_emb, mapping, discriminator = build_model(params, True)
 trainer = Trainer(src_emb, tgt_emb, mapping, discriminator, params)
 evaluator = Evaluator(trainer)
 
+
+# load a training dictionary. if a dictionary path is not provided, use a default
+# one ("default") or create one based on identical character strings ("identical_char")
+trainer.load_training_dico(params.dico_train)
+trainer.load_levcosts(params.levenshtein)
 
 """
 Learning loop for Adversarial Training
